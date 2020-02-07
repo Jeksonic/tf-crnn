@@ -1,0 +1,20 @@
+{
+  "lookup_alphabet_file" : "./data/open_alpr/generated/generated_alphabet/open_alpr_alphabet_lookup.json",
+  "csv_files_train" : "./data/open_alpr/generated/generated_csv/train.csv",
+  "csv_files_eval" : "./data/open_alpr/generated/generated_csv/validation.csv",
+  "output_model_dir" : "./output_model_open_alpr",
+  "num_beam_paths" : 1,
+  "cnn_features_list" : [64, 128, 256, 512],
+  "cnn_kernel_size" : [3, 3, 3, 3],
+  "cnn_stride_size" : [[1, 1], [1, 1], [1, 1], [1, 1]],
+  "cnn_pool_size" : [[2, 2], [2, 2], [2, 1], [2, 1]],
+  "cnn_batch_norm" : [true, true, true, true],
+  "max_chars_per_string" : 10,
+  "n_epochs" : 200,
+  "train_batch_size" : 64,
+  "eval_batch_size" : 64,
+  "learning_rate": 1e-3,
+  "input_shape" : [50, 100],
+  "rnn_units" : [128, 128, 128, 128],
+  "restore_model" : false
+}

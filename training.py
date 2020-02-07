@@ -42,12 +42,16 @@ def training(_config: dict):
     csv_train_file, csv_eval_file, \
     n_samples_train, n_samples_eval = data_preprocessing(parameters)
 
+    parameters.train_batch_size = min(parameters.train_batch_size, n_samples_train)
+    parameters.eval_batch_size = min(parameters.eval_batch_size, n_samples_eval)
+
     # export config file in model output dir
     with open(export_config_filename, 'w') as file:
         json.dump(parameters.to_dict(), file)
 
     # Create callbacks
     logdir = os.path.join(parameters.output_model_dir, 'logs')
+    os.makedirs(logdir, exist_ok=True)
     tb_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir,
                                                  profile_batch=0)
 

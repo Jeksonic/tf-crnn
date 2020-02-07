@@ -273,10 +273,12 @@ def dataset_generator(csv_filename: Union[List[str], str],
         column_defaults = [['None'], ['None'], tf.int32]
         column_names = ['paths', 'label_codes', 'label_seq_length']
         label_name = 'label_codes'
+        select_cols = None
     else:
         column_defaults = [['None']]
         column_names = ['paths']
         label_name = None
+        select_cols = [0]
 
     num_parallel_reads = 1
 
@@ -285,7 +287,8 @@ def dataset_generator(csv_filename: Union[List[str], str],
         dataset = tf.data.experimental.CsvDataset(filename,
                                                   record_defaults=column_defaults,
                                                   field_delim=params.csv_delimiter,
-                                                  header=False)
+                                                  header=False,
+                                                  select_cols=select_cols)
         return dataset
 
     def map_fn(*columns):
