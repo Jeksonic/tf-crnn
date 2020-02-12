@@ -16,6 +16,7 @@ import os
 import json
 import shutil
 import pickle
+import click
 from glob import glob
 from sacred import Experiment, SETTINGS
 
@@ -23,9 +24,8 @@ SETTINGS.CONFIG.READ_ONLY_CONFIG = False
 
 ex = Experiment('crnn')
 
-ex.add_config('config.json')
 
-@ex.automain
+@ex.main
 def training(_config: dict):
     parameters = Params(**_config)
 
@@ -126,3 +126,14 @@ def training(_config: dict):
               validation_data=dataset_eval,
               validation_steps=np.floor(n_samples_eval / parameters.eval_batch_size),
               callbacks=list_callbacks)
+
+
+@click.command()
+@click.option('--config_filename', help='A json file containing the config for the experiment')
+def configure(config_filename: str):
+    ex.add_config(config_filename)
+    ex.run(named_configs=[config_filename])
+
+
+if __name__ == '__main__':
+    configure()

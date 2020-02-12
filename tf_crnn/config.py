@@ -266,6 +266,8 @@ class Params:
     :vartype output_model_dir: str
     :ivar restore_model: boolean to continue training with saved weights (default: False)
     :vartype restore_model: bool
+    :ivar del_output_model_dir: boolean to continue training when output_model_dir exists (default: False)
+    :vartype del_output_model_dir: bool
     """
     def __init__(self, **kwargs):
         # model params
