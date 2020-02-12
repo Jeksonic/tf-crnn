@@ -14,6 +14,7 @@ import tensorflow as tf
 import numpy as np
 import os
 import json
+import shutil
 import pickle
 from glob import glob
 from sacred import Experiment, SETTINGS
@@ -28,12 +29,21 @@ ex.add_config('config.json')
 def training(_config: dict):
     parameters = Params(**_config)
 
-    export_config_filename =  os.path.join(parameters.output_model_dir, 'config.json')
+    export_config_filename = os.path.join(parameters.output_model_dir, 'config.json')
     saving_dir = os.path.join(parameters.output_model_dir, FOLDER_SAVED_MODEL)
 
-    if not parameters.restore_model:
-        # check if output folder already exists
-        assert not os.path.isdir(parameters.output_model_dir), \
+    is_dir_exist = os.path.isdir(parameters.output_model_dir)
+    is_dir_del = parameters.del_output_model_dir
+    is_dir_restore = parameters.restore_model
+    if not is_dir_exist:
+        is_dir_restore = False
+        os.makedirs(parameters.output_model_dir)
+    elif is_dir_del:
+        is_dir_restore = False
+        shutil.rmtree(parameters.output_model_dir)
+        os.makedirs(parameters.output_model_dir)
+    elif not is_dir_restore:
+        assert not is_dir_exist, \
             '{} already exists, you cannot use it as output directory.'.format(parameters.output_model_dir)
             # 'Set "restore_model=True" to continue training, or delete dir "rm -r {0}"'.format(parameters.output_model_dir)
         os.makedirs(parameters.output_model_dir)
@@ -75,7 +85,7 @@ def training(_config: dict):
 
     list_callbacks = [tb_callback, lrtb_callback, lr_callback, es_callback, sv_callback]
 
-    if parameters.restore_model:
+    if is_dir_restore:
         last_time_stamp = max([int(p.split(os.path.sep)[-1].split('-')[0])
                                for p in glob(os.path.join(saving_dir, '*'))])
 

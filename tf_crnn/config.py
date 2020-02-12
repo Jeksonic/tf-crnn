@@ -302,6 +302,7 @@ class Params:
         self.evaluate_every_epoch = kwargs.get('evaluate_every_epoch', 5)
         self.save_interval = kwargs.get('save_interval', 20)
         self.restore_model = kwargs.get('restore_model', False)
+        self.del_output_model_dir = kwargs.get('del_output_model_dir', False)
 
         self._assign_alphabet()
 
