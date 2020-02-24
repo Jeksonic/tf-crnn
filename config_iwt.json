@@ -1,8 +1,8 @@
 {
-  "lookup_alphabet_file" : "./data/open_alpr/generated/generated_alphabet/alphabet_lookup.json",
-  "csv_files_train" : "./data/open_alpr/generated/generated_csv/train.csv",
-  "csv_files_eval" : "./data/open_alpr/generated/generated_csv/validation.csv",
-  "output_model_dir" : "./output_model_open_alpr",
+  "lookup_alphabet_file" : "./data/iwt/generated/generated_alphabet/alphabet_lookup.json",
+  "csv_files_train" : "./data/iwt/generated/generated_csv/train.csv",
+  "csv_files_eval" : "./data/iwt/generated/generated_csv/validation.csv",
+  "output_model_dir" : "./output_model_iwt",
   "num_beam_paths" : 1,
   "cnn_features_list" : [64, 128, 256, 512],
   "cnn_kernel_size" : [3, 3, 3, 3],

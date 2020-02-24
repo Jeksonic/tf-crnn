@@ -18,6 +18,7 @@ setup(name='tf_crnn',
             'opencv-python',
             'pandas',
             'click',
+            'scikit-learn',
             'tensorflow-addons',
             'tensorflow-gpu',
             'taputapu'

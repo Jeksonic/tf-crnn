@@ -111,7 +111,7 @@ def tf_crnn_label_formatting(csv_filename: str):
         return formated_string
 
     df = pd.read_csv(csv_filename, sep=';', header=None, names=['image', 'labels'], encoding='utf8',
-                     escapechar="\\", quoting=3)
+                     dtype={0: 'str', 1: 'str'}, escapechar="\\", quoting=3)
 
     df.labels = df.labels.apply(lambda x: _string_formatting(x))
 

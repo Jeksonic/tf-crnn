@@ -72,7 +72,7 @@ def preprocess_csv(csv_filename: str,
                             sep=parameters.csv_delimiter,
                             header=None,
                             names=['paths', 'labels'],
-                            encoding='utf8',
+                            encoding=CONST.FILE_ENCODING,
                             escapechar="\\",
                             quoting=0)
 
@@ -116,7 +116,7 @@ def preprocess_csv(csv_filename: str,
     new_dataframe.to_csv(output_csv_filename,
                          sep=parameters.csv_delimiter,
                          header=False,
-                         encoding='utf8',
+                         encoding=CONST.FILE_ENCODING,
                          index=False,
                          escapechar="\\",
                          quoting=0)
@@ -137,8 +137,8 @@ def data_preprocessing(params: Params) -> (str, str, int, int):
     else:
         'Output directory {} already exists'.format(output_dir)
 
-    csv_train_output = os.path.join(output_dir, 'updated_train.csv')
-    csv_eval_output = os.path.join(output_dir, 'updated_eval.csv')
+    csv_train_output = os.path.join(output_dir, CONST.PREPROCESSED_TRAIN_FILENAME)
+    csv_eval_output = os.path.join(output_dir, CONST.PREPROCESSED_EVAL_FILENAME)
 
     # Preprocess train csv
     n_samples_train = preprocess_csv(params.csv_files_train, params, csv_train_output)

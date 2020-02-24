@@ -15,6 +15,23 @@ import pandas as pd
 class CONST:
     DIMENSION_REDUCTION_W_POOLING = 2*2  # 2x2 pooling in dimension W on layer 1 and 2
     PREPROCESSING_FOLDER = 'preprocessed'
+    PREPROCESSED_TRAIN_FILENAME = 'updated_train.csv'
+    PREPROCESSED_EVAL_FILENAME = 'updated_eval.csv'
+    EVALUATION_FILENAME = 'evaluation_data.csv'
+    FILE_ENCODING = 'utf8'
+    MODEL_WEIGHTS_FILENAME = 'weights.h5'
+    OPTIMIZER_WEIGHTS_FILENAME = 'optimizer_weights.pkl'
+    LEARNING_RATE_FILENAME = 'learning_rate.pkl'
+    LAYERS_FILENAME = 'architecture.json'
+    EPOCH_FILENAME = 'epoch.pkl'
+    FOLDER_SAVED_MODEL = 'saving'
+    CONFIG_FILENAME = 'config.json'
+    PREDICTIONS_FILENAME_FORMAT = 'predictions-{}.txt'
+    BATCH_OUTPUT_LOGS_KEY = 'outputs'
+    LEARNING_RATE_LOGS_KEY = 'lr'
+    BLANK_SYMBOL = '$'
+    CSV_DELIMITER = ';'
+    STRING_SPLIT_DELIMITER = '|'
 
 
 class Alphabet:
@@ -30,7 +47,7 @@ class Alphabet:
     :ivar _nclasses: number of alphabet units.
     :vartype _nclasses: int
     """
-    def __init__(self, lookup_alphabet_file: str=None, blank_symbol: str='$'):
+    def __init__(self, lookup_alphabet_file: str = None, blank_symbol: str = CONST.BLANK_SYMBOL):
 
         self._blank_symbol = blank_symbol
 
@@ -56,8 +73,8 @@ class Alphabet:
             self.lookup_int2str = dict(zip(self.codes, self.alphabet_units))
 
     def check_input_file_alphabet(self, csv_filenames: List[str],
-                                  discarded_chars: str=';|{}'.format(string.whitespace[1:]),
-                                  csv_delimiter: str=";") -> None:
+                                  discarded_chars: str = ';|{}'.format(string.whitespace[1:]),
+                                  csv_delimiter: str = CONST.CSV_DELIMITER) -> None:
         """
         Checks if labels of input files contains only characters that are in the Alphabet.
 
@@ -73,9 +90,9 @@ class Alphabet:
         for filename in csv_filenames:
             input_chars_set = set()
 
-            with open(filename, 'r', encoding='utf8') as f:
-                csvreader = csv.reader(f, delimiter=csv_delimiter, escapechar='\\', quoting=0)
-                for line in csvreader:
+            with open(filename, 'r', encoding=CONST.FILE_ENCODING) as f:
+                csv_reader = csv.reader(f, delimiter=csv_delimiter, escapechar='\\', quoting=0)
+                for line in csv_reader:
                     input_chars_set.update(line[1])
 
             # Discard all whitespaces except space ' '
@@ -93,8 +110,8 @@ class Alphabet:
         and avoids multiple instances of the same code label (bijectivity)
 
         :param lookup_table: dictionary to be mapped {alphabet_unit : code label}
-        :param unique_entry: If each alphabet unit has a unique code and each code a unique alphabet unique ('bijective'),
-                            only True is implemented for now
+        :param unique_entry: If each alphabet unit has a unique code and
+            each code a unique alphabet unique ('bijective'), only True is implemented for now
         :return: a mapped dictionary
         """
 
@@ -114,7 +131,7 @@ class Alphabet:
 
     @classmethod
     def create_lookup_from_labels(cls, csv_files: List[str], export_lookup_filename: str,
-                                  original_lookup_filename: str=None):
+                                  original_lookup_filename: str = None):
         """
         Create a lookup dictionary for csv files containing labels. Exports a json file with the Alphabet.
 
@@ -132,7 +149,7 @@ class Alphabet:
             lookup = dict()
 
         for filename in csv_files:
-            data = pd.read_csv(filename, sep=';', encoding='utf8', error_bad_lines=False, header=None,
+            data = pd.read_csv(filename, sep=';', encoding=CONST.FILE_ENCODING, error_bad_lines=False, header=None,
                                names=['path', 'transcription'], escapechar='\\')
             for index, row in data.iterrows():
                 set_chars.update(row.transcription.split('|'))
@@ -145,26 +162,26 @@ class Alphabet:
         lookup = cls.map_lookup(lookup)
 
         # Save new lookup
-        with open(export_lookup_filename, 'w', encoding='utf8') as f:
+        with open(export_lookup_filename, 'w', encoding=CONST.FILE_ENCODING) as f:
             json.dump(lookup, f)
 
     @classmethod
     def load_lookup_from_json(cls, json_filenames: Union[List[str], str]) -> dict:
         """
-        Load a lookup table from a json file to a dictionnary
-        :param json_filenames: either a filename or a list of filenames
+        Load a lookup table from a json file to a dictionary
+        :param json_filenames: either a filename or a list of file names
         :return:
         """
 
         lookup = dict()
         if isinstance(json_filenames, list):
             for file in json_filenames:
-                with open(file, 'r', encoding='utf8') as f:
+                with open(file, 'r', encoding=CONST.FILE_ENCODING) as f:
                     data_dict = json.load(f)
                 lookup.update(data_dict)
 
         elif isinstance(json_filenames, str):
-            with open(json_filenames, 'r', encoding='utf8') as f:
+            with open(json_filenames, 'r', encoding=CONST.FILE_ENCODING) as f:
                 lookup = json.load(f)
 
         return cls.map_lookup(lookup)
@@ -215,14 +232,14 @@ class Params:
     :ivar cnn_kernel_size: a list of length `n_layers` containing the size of the kernel for each convolutionl layer
         (default: [3, 3, 3, 3, 3])
     :vartype cnn_kernel_size: List(int)
-    :ivar cnn_stride_size: a list of length `n_layers` containing the stride size each convolutionl layer
+    :ivar cnn_stride_size: a list of length `n_layers` containing the stride size each convolutional layer
         (default: [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)])
     :vartype cnn_stride_size: List((int, int))
     :ivar cnn_pool_size: a list of length `n_layers` containing the pool size each MaxPool layer
         default: ([(2, 2), (2, 2), (2, 2), (2, 2), (1, 1)])
     :vartype cnn_pool_size: List((int, int))
-    :ivar cnn_batch_norm: a list of length `n_layers` containing a bool that indicated wether or not to use batch normalization
-        (default: [False, False, False, False, False])
+    :ivar cnn_batch_norm: a list of length `n_layers` containing a bool that indicated wether or not to use batch
+        normalization (default: [False, False, False, False, False])
     :vartype cnn_batch_norm: List(bool)
     :ivar rnn_units: a list containing the number of units per rnn layer (default: 256)
     :vartype rnn_units: List(int)
@@ -244,7 +261,8 @@ class Params:
     :vartype max_chars_per_string: int
     :ivar data_augmentation: if True augments data on the fly (default: true)
     :vartype data_augmentation: bool
-    :ivar data_augmentation_max_rotation: max permitted roation to apply to image during training in radians (default: 0.005)
+    :ivar data_augmentation_max_rotation: max permitted rotation to apply to image during training in radians
+        (default: 0.005)
     :vartype data_augmentation_max_rotation: float
     :ivar data_augmentation_max_slant: maximum angle for slant augmentation (default: 0.7)
     :vartype data_augmentation_max_slant: float
@@ -282,7 +300,7 @@ class Params:
         # self._keep_prob_dropout = kwargs.get('keep_prob_dropout', 0.5)
         self.num_beam_paths = kwargs.get('num_beam_paths', 1)
         # csv params
-        self.csv_delimiter = kwargs.get('csv_delimiter', ';')
+        self.csv_delimiter = kwargs.get('csv_delimiter', CONST.CSV_DELIMITER)
         self.string_split_delimiter = kwargs.get('string_split_delimiter', '|')
         self.csv_files_train = kwargs.get('csv_files_train')
         self.csv_files_eval = kwargs.get('csv_files_eval')
@@ -317,10 +335,10 @@ class Params:
             "Length of parameters of model are not the same, check that all the layers parameters have the same length."
 
         max_input_width = (self.max_chars_per_string + 1) * self.downscale_factor
-        assert max_input_width <= self.input_shape[1], "Maximum length of labels is {}, input width should be greater or " \
-                                                       "equal to {} but is {}".format(self.max_chars_per_string,
-                                                                                      max_input_width,
-                                                                                      self.input_shape[1])
+        assert max_input_width <= self.input_shape[1], "Maximum length of labels is {}, input width should be greater" \
+                                                       " or equal to {} but is {}".format(self.max_chars_per_string,
+                                                                                          max_input_width,
+                                                                                          self.input_shape[1])
 
         assert self.optimizer in ['adam', 'rms', 'ada'], 'Unknown optimizer {}'.format(self.optimizer)
 
@@ -372,11 +390,11 @@ class Params:
         return cls(**config)
 
 
-def import_params_from_json(model_directory: str=None, json_filename: str=None) -> dict:
+def import_params_from_json(model_directory: str = None, json_filename: str = None) -> dict:
     """
     Read the exported json file with parameters of the experiment.
 
-    :param model_directory: Direcoty where the odel was exported
+    :param model_directory: Directory where the model was exported
     :param json_filename: filename of the file
     :return: a dictionary containing the parameters of the experiment
     """

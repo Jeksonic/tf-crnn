@@ -9,7 +9,8 @@ from tf_crnn.config import Params
 from tf_crnn.model import get_model_train
 from tf_crnn.preprocessing import data_preprocessing
 from tf_crnn.data_handler import dataset_generator
-from tf_crnn.callbacks import CustomLoaderCallback, CustomSavingCallback, LRTensorBoard, EPOCH_FILENAME, FOLDER_SAVED_MODEL
+from tf_crnn.callbacks import CustomLoaderCallback, CustomSavingCallback, LRTensorBoard
+from tf_crnn.config import CONST
 import tensorflow as tf
 import numpy as np
 import os
@@ -29,8 +30,8 @@ ex = Experiment('crnn')
 def training(_config: dict):
     parameters = Params(**_config)
 
-    export_config_filename = os.path.join(parameters.output_model_dir, 'config.json')
-    saving_dir = os.path.join(parameters.output_model_dir, FOLDER_SAVED_MODEL)
+    export_config_filename = os.path.join(parameters.output_model_dir, CONST.CONFIG_FILENAME)
+    saving_dir = os.path.join(parameters.output_model_dir, CONST.FOLDER_SAVED_MODEL)
 
     is_dir_exist = os.path.isdir(parameters.output_model_dir)
     is_dir_del = parameters.del_output_model_dir
@@ -45,12 +46,11 @@ def training(_config: dict):
     elif not is_dir_restore:
         assert not is_dir_exist, \
             '{} already exists, you cannot use it as output directory.'.format(parameters.output_model_dir)
-            # 'Set "restore_model=True" to continue training, or delete dir "rm -r {0}"'.format(parameters.output_model_dir)
         os.makedirs(parameters.output_model_dir)
 
-    # data and csv preprocessing
+    # data and csv pre-processing
     csv_train_file, csv_eval_file, \
-    n_samples_train, n_samples_eval = data_preprocessing(parameters)
+        n_samples_train, n_samples_eval = data_preprocessing(parameters)
 
     parameters.train_batch_size = min(parameters.train_batch_size, n_samples_train)
     parameters.eval_batch_size = min(parameters.eval_batch_size, n_samples_eval)
@@ -60,12 +60,12 @@ def training(_config: dict):
         json.dump(parameters.to_dict(), file)
 
     # Create callbacks
-    logdir = os.path.join(parameters.output_model_dir, 'logs')
-    os.makedirs(logdir, exist_ok=True)
-    tb_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir,
+    log_dir = os.path.join(parameters.output_model_dir, 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+    tb_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                                  profile_batch=0)
 
-    lrtb_callback = LRTensorBoard(log_dir=logdir,
+    lrtb_callback = LRTensorBoard(log_dir=log_dir,
                                   profile_batch=0)
 
     lr_callback = tf.keras.callbacks.ReduceLROnPlateau(factor=0.5,
@@ -94,7 +94,7 @@ def training(_config: dict):
 
         list_callbacks.append(ld_callback)
 
-        with open(os.path.join(loading_dir, EPOCH_FILENAME), 'rb') as f:
+        with open(os.path.join(loading_dir, CONST.EPOCH_FILENAME), 'rb') as f:
             initial_epoch = pickle.load(f)
 
         epochs = initial_epoch + parameters.n_epochs
@@ -105,25 +105,25 @@ def training(_config: dict):
     # Get model
     model = get_model_train(parameters)
 
-    # Get datasets
-    dataset_train = dataset_generator([csv_train_file],
+    # Get data-sets
+    data_set_train = dataset_generator([csv_train_file],
+                                       parameters,
+                                       batch_size=parameters.train_batch_size,
+                                       data_augmentation=parameters.data_augmentation,
+                                       num_epochs=parameters.n_epochs)
+
+    data_set_eval = dataset_generator([csv_eval_file],
                                       parameters,
-                                      batch_size=parameters.train_batch_size,
-                                      data_augmentation=parameters.data_augmentation,
+                                      batch_size=parameters.eval_batch_size,
+                                      data_augmentation=False,
                                       num_epochs=parameters.n_epochs)
 
-    dataset_eval = dataset_generator([csv_eval_file],
-                                     parameters,
-                                     batch_size=parameters.eval_batch_size,
-                                     data_augmentation=False,
-                                     num_epochs=parameters.n_epochs)
-
     # Train model
-    model.fit(dataset_train,
+    model.fit(data_set_train,
               epochs=epochs,
               initial_epoch=initial_epoch,
               steps_per_epoch=np.floor(n_samples_train / parameters.train_batch_size),
-              validation_data=dataset_eval,
+              validation_data=data_set_eval,
               validation_steps=np.floor(n_samples_eval / parameters.eval_batch_size),
               callbacks=list_callbacks)
 

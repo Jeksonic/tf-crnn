@@ -6,8 +6,8 @@ import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.backend import ctc_batch_cost, ctc_decode
 from tensorflow.keras.layers import Layer, Conv2D, BatchNormalization, MaxPool2D, Input, Permute, \
-    Reshape, Bidirectional, LSTM, Dense, Softmax, Lambda
-from typing import List, Tuple
+    Reshape, Bidirectional, LSTM, Dense, Softmax
+from typing import Tuple
 from .config import Params
 
 
@@ -84,8 +84,7 @@ class ConvBlock(Layer):
         return dict(list(super_config.items()) + list(config.items()))
 
 
-def get_crnn_output(input_images,
-                    parameters: Params=None) -> tf.Tensor:
+def get_crnn_output(input_images, parameters: Params = None) -> tf.Tensor:
     """
     Creates the CRNN network and returns it's output.
     Passes the `input_images` through the network and returns its output
@@ -190,8 +189,7 @@ def get_model_train(parameters: Params):
     return model
 
 
-def get_model_inference(parameters: Params,
-                        weights_path: str=None):
+def get_model_inference(parameters: Params, weights_path: str = None):
     """
     Constructs the full model for prediction.
     Defines inputs and outputs, and loads the weights.

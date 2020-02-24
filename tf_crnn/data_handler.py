@@ -103,6 +103,7 @@ def augment_data(image: tf.Tensor,
 
         return image
 
+
 @tf.function
 def get_resized_width(image: tf.Tensor,
                       target_height: int,

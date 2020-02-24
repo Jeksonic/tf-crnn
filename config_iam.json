@@ -1,5 +1,5 @@
 {
-  "lookup_alphabet_file" : "./data/iam/generated/generated_alphabet/iam_alphabet_lookup.json",
+  "lookup_alphabet_file" : "./data/iam/generated/generated_alphabet/alphabet_lookup.json",
   "csv_files_train" : "./data/iam/generated/generated_csv/lines_train.csv",
   "csv_files_eval" : "./data/iam/generated/generated_csv/lines_validation1.csv",
   "output_model_dir" : "./output_model_iam",
