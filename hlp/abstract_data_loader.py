@@ -11,7 +11,6 @@ from tqdm import tqdm
 
 from alphabet_helpers import generate_alphabet_file
 from string_data_manager import tf_crnn_label_formatting
-from tf_crnn import CONST
 
 
 class DownloadProgressBar(tqdm):
@@ -104,7 +103,7 @@ class BaseDataLoader(AbstractDataLoader):
                                  ('test', self.get_test_data())]:
             csv_filename = os.path.join(self.export_csv_dir, '{}.csv'.format(data_set))
             pd.concat([pd.Series(data[0]), pd.Series(data[1])], axis=1) \
-                .to_csv(csv_filename, sep=';', encoding=CONST.FILE_ENCODING,
+                .to_csv(csv_filename, sep=';', encoding='utf8',
                         header=False, index=False, escapechar="\\", quoting=3)
 
     def prepare_data(self):
