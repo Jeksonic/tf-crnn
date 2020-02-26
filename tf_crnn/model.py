@@ -152,12 +152,9 @@ def get_model_train(parameters: Params):
     def warp_ctc_loss(y_true, y_pred):
         return ctc_batch_cost(label_codes, y_pred, input_seq_len, label_seq_length)
 
-    # Metric function
-    def warp_cer_metric(y_true, y_pred):
-        pred_sequence_length, true_sequence_length = input_seq_len, label_seq_length
-
+    def get_pred_diff(y_true, y_pred):
         # y_pred needs to be decoded (its the logits)
-        pred_codes_dense = ctc_decode(y_pred, tf.squeeze(pred_sequence_length, axis=-1), greedy=True)
+        pred_codes_dense = ctc_decode(y_pred, tf.squeeze(input_seq_len, axis=-1), greedy=True)
         pred_codes_dense = tf.squeeze(tf.cast(pred_codes_dense[0], tf.int64), axis=0)  # only [0] if greedy=true
 
         # create sparse tensor
@@ -172,18 +169,33 @@ def get_model_train(parameters: Params):
                                        tf.cast(tf.shape(label_codes), tf.int64))
         label_sparse = tf.cast(label_sparse, tf.int64)
 
-        # Compute edit distance and total chars count
-        distance = tf.reduce_sum(tf.edit_distance(pred_codes_sparse, label_sparse, normalize=False))
-        count_chars = tf.reduce_sum(true_sequence_length)
+        # Compute edit distance
+        return tf.edit_distance(pred_codes_sparse, label_sparse, normalize=False)
 
-        return tf.divide(distance, tf.cast(count_chars, tf.float32), name='CER')
+    # Metric function
+    def warp_cer_metric(y_true, y_pred):
+        edit_distance = get_pred_diff(y_true, y_pred)
+        count_chars = tf.cast(tf.reduce_sum(label_seq_length), tf.float32)
+        distance = tf.reduce_sum(edit_distance)
+        return tf.divide(distance, count_chars, name='CER')
+
+    # Accuracy by char calculation
+    def char_acc(y_true, y_pred):
+        return tf.subtract(1.0, warp_cer_metric(y_true, y_pred), name='CHAR_ACC')
+
+    # Accuracy by word calculation
+    def word_acc(y_true, y_pred):
+        edit_distance = get_pred_diff(y_true, y_pred)
+        count_words = tf.cast(tf.shape(edit_distance), tf.int64)
+        distance = count_words - tf.math.count_nonzero(edit_distance, 0)
+        return tf.divide(distance, count_words, name='WORD_ACC')
 
     # Define model and compile it
     model = Model(inputs=[input_images, label_codes, input_seq_len, label_seq_length], outputs=net_output, name='CRNN')
     optimizer = tf.keras.optimizers.Adam(learning_rate=parameters.learning_rate)
     model.compile(loss=[warp_ctc_loss],
                   optimizer=optimizer,
-                  metrics=[warp_cer_metric],
+                  metrics=[char_acc, word_acc],
                   experimental_run_tf_function=False) # TODO this is set to true by default but does not seem to work...
 
     return model
