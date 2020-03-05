@@ -39,7 +39,7 @@ class IwtDataLoader(BaseDataLoader):
 
             src_file = os.path.join(self.download_dir, row['image_path'])
             src_filename = os.path.basename(src_file).split('.')[0]
-            dst_filename = '{}_{}.jpg'.format(row['track_id'], src_filename)
+            dst_filename = '{}_{}.jpg'.format(row['lp'], src_filename)
             dst_file = os.path.abspath(os.path.join(self.export_img_dir, dst_filename))
 
             img = cv2.imread(src_file, cv2.IMREAD_GRAYSCALE)
